@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 项目
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  description String?
+  status      String        @default("active") // active | maintenance | archived
+  owner       String?
+  repoUrl     String?
+  tags        String? // 逗号分隔
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  environments Environment[]
+}
+
+// 服务器资产
+model Server {
+  id            String         @id @default(cuid())
+  name          String
+  host          String
+  port          Int            @default(22)
+  sshUser       String         @default("root")
+  sshAuthType   String         @default("password") // password | privateKey
+  sshPassword   String?
+  sshPrivateKey String?
+  os            String?
+  provider      String? // 供应商/区域
+  notes         String?
+  status        String         @default("online") // online | offline | maintenance
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  targets       DeployTarget[]
+}
+
+// 项目环境（生产/测试/开发...）
+model Environment {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  deployPath  String // 服务器上的部署目录，如 /opt/aux-system
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  files       EnvFile[]
+  targets     DeployTarget[]
+
+  @@unique([projectId, name])
+}
+
+// 环境级共享文件（如 docker-compose.yml），同环境所有服务器共用
+model EnvFile {
+  id            String      @id @default(cuid())
+  environmentId String
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  filename      String
+  content       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([environmentId, filename])
+}
+
+// 部署目标：环境 × 服务器
+model DeployTarget {
+  id            String       @id @default(cuid())
+  environmentId String
+  environment   Environment  @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  serverId      String
+  server        Server       @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  enabled       Boolean      @default(true)
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  files         TargetFile[]
+  syncLogs      SyncLog[]
+
+  @@unique([environmentId, serverId])
+}
+
+// 目标级专属文件（如各服务器独立的 .env），同步时覆盖同名环境级文件
+model TargetFile {
+  id             String       @id @default(cuid())
+  deployTargetId String
+  deployTarget   DeployTarget @relation(fields: [deployTargetId], references: [id], onDelete: Cascade)
+  filename       String
+  content        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([deployTargetId, filename])
+}
+
+// 同步日志
+model SyncLog {
+  id             String       @id @default(cuid())
+  deployTargetId String
+  deployTarget   DeployTarget @relation(fields: [deployTargetId], references: [id], onDelete: Cascade)
+  status         String // success | failed
+  filesSynced    Int          @default(0)
+  commandExecuted String?
+  output         String?
+  errorMessage   String?
+  durationMs     Int          @default(0)
+  createdAt      DateTime     @default(now())
+}
