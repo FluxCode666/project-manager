@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/projects", label: "项目", icon: "◈" },
   { href: "/servers", label: "服务器", icon: "▤" },
   { href: "/logs", label: "同步日志", icon: "≡" },
+  { href: "/backup", label: "备份", icon: "⬓" },
 ];
 
 export function Sidebar() {

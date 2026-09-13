@@ -113,3 +113,30 @@ model SyncLog {
   durationMs     Int          @default(0)
   createdAt      DateTime     @default(now())
 }
+
+// 备份配置（单例，id 固定为 "default"）
+model BackupConfig {
+  id           String   @id @default("default")
+  enabled      Boolean  @default(false)
+  webdavUrl    String? // 如 https://dav.example.com/dav
+  webdavPath   String? // 远端子目录，如 /project-manager-backups
+  username     String?
+  password     String?
+  retention    Int      @default(14) // 保留备份数
+  cronEvery    Int      @default(24) // 定时间隔（小时），0 = 手动
+  lastRunAt    DateTime?
+  updatedAt    DateTime @updatedAt
+}
+
+// 备份记录
+model BackupLog {
+  id          String   @id @default(cuid())
+  trigger     String // manual | scheduled
+  status      String // success | failed
+  fileName    String?
+  fileSize    Int      @default(0) // 字节
+  remoteUrl   String?
+  durationMs  Int      @default(0)
+  errorMessage String?
+  createdAt   DateTime @default(now())
+}
