@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { VersionDialog } from "@/components/version-dialog";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -15,6 +17,15 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [versionOpen, setVersionOpen] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/version")
+      .then((r) => r.json())
+      .then((d) => setVersion(d.current))
+      .catch(() => {});
+  }, []);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -51,11 +62,19 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="border-t p-3">
+        <button
+          onClick={() => setVersionOpen(true)}
+          className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <span>⬢</span>项目管理系统
+          {version && <code className="font-mono">v{version.replace(/^v/, "")}</code>}
+        </button>
         <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
           <span className="w-4 text-center">⏻</span>
           退出登录
         </Button>
       </div>
+      <VersionDialog open={versionOpen} onOpenChange={setVersionOpen} />
     </aside>
   );
 }

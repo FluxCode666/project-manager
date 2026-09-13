@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: "file:./build-placeholder.db"
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Write VERSION
+        run: echo -n "${GITHUB_REF_NAME}" > VERSION
+
+      # 自更新包：standalone 产物 + static + prisma 迁移 + 运行时依赖
+      - name: Package update bundle
+        run: |
+          mkdir -p bundle/.next
+          cp -r .next/standalone/* bundle/
+          rm -rf bundle/.next/static
+          cp -r .next/static bundle/.next/static
+          cp -r public bundle/public 2>/dev/null || true
+          cp -r prisma bundle/prisma
+          cp VERSION bundle/VERSION
+          # standalone 不含完整 node_modules，装上运行时依赖（含原生模块，目标机 npm rebuild）
+          cd bundle
+          npm install --omit=dev better-sqlite3 @prisma/adapter-better-sqlite3 ssh2
+          cd ..
+          tar -czf "project-manager-${GITHUB_REF_NAME}.tar.gz" -C bundle .
+
+      - name: Generate sha256
+        run: sha256sum "project-manager-${GITHUB_REF_NAME}.tar.gz" > "project-manager-${GITHUB_REF_NAME}.tar.gz.sha256"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: |
+            project-manager-*.tar.gz
+            project-manager-*.tar.gz.sha256
+
+  github-release:
+    needs: build-tarball
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            project-manager-*.tar.gz
+            project-manager-*.tar.gz.sha256
+
+  docker-image:
+    needs: build-tarball
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push (amd64 + arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

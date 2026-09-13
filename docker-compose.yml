@@ -1,0 +1,21 @@
+services:
+  project-manager:
+    image: ghcr.io/fluxcode666/project-manager:${TAG:-latest}
+    container_name: project-manager
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${SERVER_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=file:/data/project-manager.db
+      - APP_PASSWORD=${APP_PASSWORD:?请在 .env 中设置 APP_PASSWORD}
+      - AUTH_SECRET=${AUTH_SECRET:?请在 .env 中设置 AUTH_SECRET}
+      - GITHUB_REPO=${GITHUB_REPO:-fluxcode666/project-manager}
+      # 私有仓库检查更新需要 token（public_repo 读权限）；公开仓库可留空
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      # 启动时自动执行数据库迁移，置 false 可禁用
+      - AUTO_MIGRATE=${AUTO_MIGRATE:-true}
+    volumes:
+      # SQLite 数据库（务必持久化）
+      - ./data:/data
+      # 应用内自更新的版本目录（跨容器重启保留新版本）
+      - ./versions:/versions

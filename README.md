@@ -71,12 +71,43 @@ npm run dev
 
 ## 部署
 
+### Docker Compose（推荐）
+
 ```bash
-npm run build
-npm start
+mkdir project-manager && cd project-manager
+curl -O https://raw.githubusercontent.com/fluxcode666/project-manager/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/fluxcode666/project-manager/main/.env.docker.example
+# 编辑 .env：设置 APP_PASSWORD、AUTH_SECRET
+docker compose up -d
 ```
 
-单进程部署即可（SQLite + 内置 session）。建议放内网或加反向代理。
+- 数据库落在 `./data/project-manager.db`（SQLite，自动执行迁移）
+- `./versions` 为应用内自更新的版本目录
+- 默认只绑 `127.0.0.1:3000`，对外请用 Nginx/Caddy 反代
+
+### 应用内自更新
+
+1. 推送 tag（如 `v1.0.1`）触发 GitHub Actions：
+   - 构建 `project-manager-<tag>.tar.gz` 更新包 + `.sha256`，发布 GitHub Release
+   - 构建并推送 amd64/arm64 多架构镜像到 GHCR
+2. 管理员在页面侧边栏底部点击**版本号**，弹窗内：
+   - 查看当前版本 / 最新 release / 更新日志
+   - 点击「立即更新」：系统下载 tarball → sha256 校验 → 解压到 `/versions/<tag>/` → rebuild 原生模块 → 原子切换 `/versions/current` 符号链接 → 自动重启
+   - 前端轮询服务恢复后自动刷新，全程无需登录服务器
+
+> `GITHUB_REPO` 环境变量控制检查更新的仓库；私有仓库需配置 `GITHUB_TOKEN`。
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `DATABASE_URL` | `file:/data/project-manager.db` | SQLite 路径 |
+| `APP_PASSWORD` | 必填 | 登录密码 |
+| `AUTH_SECRET` | 必填 | session 签名密钥 |
+| `GITHUB_REPO` | - | 检查更新用的仓库，如 `fluxcode666/project-manager` |
+| `GITHUB_TOKEN` | - | 私有仓库需要 |
+| `AUTO_MIGRATE` | `true` | 启动时自动执行数据库迁移 |
+| `BIND_IP` / `SERVER_PORT` / `TAG` | `127.0.0.1` / `3000` / `latest` | compose 监听与镜像版本 |
 
 ## 注意事项
 
