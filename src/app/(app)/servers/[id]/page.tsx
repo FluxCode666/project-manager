@@ -82,7 +82,7 @@ export default async function ServerDetailPage({ params }: { params: Promise<{ i
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">操作系统</span>
-              <span>{server.os || "未知"}</span>
+              <span>{server.os || "未探测（点击列表页「测试连接」自动获取）"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">创建时间</span>

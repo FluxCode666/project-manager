@@ -169,13 +169,12 @@ export function ServerFormDialog({ open, onOpenChange, server, onSaved }: Props)
             </div>
           )}
           <div className="space-y-2">
-            <Label>操作系统</Label>
-            <Input value={form.os ?? ""} onChange={(e) => set("os", e.target.value)} placeholder="Ubuntu 22.04" />
-          </div>
-          <div className="space-y-2">
             <Label>备注</Label>
             <Textarea rows={2} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
           </div>
+          <p className="text-xs text-muted-foreground">
+            操作系统信息会在「测试连接」时自动探测，无需手动填写
+          </p>
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
