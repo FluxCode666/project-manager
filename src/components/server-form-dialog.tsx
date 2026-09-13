@@ -56,6 +56,11 @@ const EMPTY: Partial<ServerData> = {
   notes: "",
 };
 
+const AUTH_OPTIONS = [
+  { value: "password", label: "密码" },
+  { value: "privateKey", label: "私钥" },
+];
+
 export function ServerFormDialog({ open, onOpenChange, server, onSaved }: Props) {
   const isEdit = !!server;
   const [form, setForm] = useState<Partial<ServerData>>(EMPTY);
@@ -135,7 +140,11 @@ export function ServerFormDialog({ open, onOpenChange, server, onSaved }: Props)
             </div>
             <div className="space-y-2">
               <Label>认证方式</Label>
-              <Select value={form.sshAuthType ?? "password"} onValueChange={(v) => v && set("sshAuthType", v)}>
+              <Select
+                value={form.sshAuthType ?? "password"}
+                onValueChange={(v) => v && set("sshAuthType", v)}
+                items={AUTH_OPTIONS}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

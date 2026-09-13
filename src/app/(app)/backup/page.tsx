@@ -53,6 +53,14 @@ interface RemoteFile {
   lastModified: string | null;
 }
 
+const CRON_OPTIONS = [
+  { value: "6", label: "每 6 小时" },
+  { value: "12", label: "每 12 小时" },
+  { value: "24", label: "每天" },
+  { value: "168", label: "每周" },
+  { value: "0", label: "关闭（仅手动）" },
+];
+
 function fmtSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -199,16 +207,17 @@ export default function BackupPage() {
                 <Select
                   value={String(config?.cronEvery ?? 24)}
                   onValueChange={(v) => v && set("cronEvery", Number(v))}
+                  items={CRON_OPTIONS}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="6">每 6 小时</SelectItem>
-                    <SelectItem value="12">每 12 小时</SelectItem>
-                    <SelectItem value="24">每天</SelectItem>
-                    <SelectItem value="168">每周</SelectItem>
-                    <SelectItem value="0">关闭（仅手动）</SelectItem>
+                    {CRON_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

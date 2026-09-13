@@ -65,6 +65,10 @@ const COMMON_COMMANDS = [
   { value: "docker compose pull && docker compose up -d", label: "pull + up -d" },
 ];
 
+const COMMAND_ITEMS: Record<string, string> = Object.fromEntries(
+  COMMON_COMMANDS.map((c) => [c.value, c.label])
+);
+
 export default function EnvironmentPage() {
   const { envId, id: projectId } = useParams<{ envId: string; id: string }>();
   const [env, setEnv] = useState<EnvironmentDetail | null>(null);
@@ -312,7 +316,7 @@ export default function EnvironmentPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={syncCommand} onValueChange={(v) => v && setSyncCommand(v)}>
+          <Select value={syncCommand} onValueChange={(v) => v && setSyncCommand(v)} items={COMMAND_ITEMS}>
             <SelectTrigger className="w-64">
               <SelectValue placeholder="同步后命令" />
             </SelectTrigger>
@@ -522,7 +526,11 @@ export default function EnvironmentPage() {
               选择一台服务器作为部署目标，绑定后可为其维护专属 env 文件。
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Select value={bindServerId} onValueChange={(v) => v && setBindServerId(v)}>
+          <Select
+            value={bindServerId}
+            onValueChange={(v) => v && setBindServerId(v)}
+            items={Object.fromEntries(availableServers.map((s) => [s.id, `${s.name}（${s.host}）`]))}
+          >
             <SelectTrigger>
               <SelectValue placeholder="选择服务器" />
             </SelectTrigger>

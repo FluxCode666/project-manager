@@ -47,6 +47,12 @@ const EMPTY: Partial<ProjectData> = {
   tags: "",
 };
 
+const STATUS_OPTIONS = [
+  { value: "active", label: "运行中" },
+  { value: "maintenance", label: "维护中" },
+  { value: "archived", label: "已归档" },
+];
+
 export function ProjectFormDialog({ open, onOpenChange, project, onSaved }: Props) {
   const isEdit = !!project;
   const [form, setForm] = useState<Partial<ProjectData>>(EMPTY);
@@ -101,7 +107,11 @@ export function ProjectFormDialog({ open, onOpenChange, project, onSaved }: Prop
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>状态</Label>
-              <Select value={form.status ?? "active"} onValueChange={(v) => v && set("status", v)}>
+              <Select
+                value={form.status ?? "active"}
+                onValueChange={(v) => v && set("status", v)}
+                items={STATUS_OPTIONS}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
