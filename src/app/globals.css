@@ -127,4 +127,17 @@
   html {
     @apply font-sans;
   }
+  /* 可点击元素 hover 显示小手 */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a,
+  select,
+  summary,
+  label:has(input[type="checkbox"], input[type="radio"]) {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"]:disabled {
+    cursor: not-allowed;
+  }
 }
