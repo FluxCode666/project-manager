@@ -42,8 +42,10 @@ jobs:
       # 自更新包：standalone 产物 + static + prisma 迁移 + 运行时依赖
       - name: Package update bundle
         run: |
-          mkdir -p bundle/.next
-          cp -r .next/standalone/* bundle/
+          mkdir -p bundle
+          # 用 cp -aT 或 rsync 复制，确保隐藏目录 .next/server 一并带上（glob * 不匹配点开头文件）
+          cp -a .next/standalone/. bundle/
+          # standalone 内已有 .next/server 等，补上静态资源
           rm -rf bundle/.next/static
           cp -r .next/static bundle/.next/static
           cp -r public bundle/public 2>/dev/null || true
@@ -54,6 +56,12 @@ jobs:
           npm install --omit=dev better-sqlite3 @prisma/adapter-better-sqlite3 ssh2
           cd ..
           tar -czf "project-manager-${GITHUB_REF_NAME}.tar.gz" -C bundle .
+      - name: Verify bundle structure
+        run: |
+          test -f bundle/server.js || (echo "bundle missing server.js" && exit 1)
+          test -d bundle/.next/server || (echo "bundle missing .next/server" && exit 1)
+          test -f bundle/VERSION || (echo "bundle missing VERSION" && exit 1)
+          echo "bundle structure OK"
 
       - name: Generate sha256
         run: sha256sum "project-manager-${GITHUB_REF_NAME}.tar.gz" > "project-manager-${GITHUB_REF_NAME}.tar.gz.sha256"
