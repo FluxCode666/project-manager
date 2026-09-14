@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SESSION_COOKIE, SESSION_MAX_AGE, checkPassword, createSessionToken } from "@/lib/auth";
+import { SESSION_COOKIE, SESSION_MAX_AGE, createSessionToken } from "@/lib/session";
+import { checkPassword } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json();
-    if (!password || !checkPassword(password)) {
+    if (!password || !(await checkPassword(password))) {
       return NextResponse.json({ error: "密码错误" }, { status: 401 });
     }
     const token = await createSessionToken();

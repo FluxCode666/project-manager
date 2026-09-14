@@ -140,3 +140,10 @@ model BackupLog {
   errorMessage String?
   createdAt   DateTime @default(now())
 }
+
+// 应用设置（键值存储，当前用于页面内修改的登录密码）
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VersionDialog } from "@/components/version-dialog";
+import { PasswordDialog } from "@/components/password-dialog";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -19,6 +20,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [versionOpen, setVersionOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,12 +72,17 @@ export function Sidebar() {
           <span>⬢</span>项目管理系统
           {version && <code className="font-mono">v{version.replace(/^v/, "")}</code>}
         </button>
+        <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setPasswordOpen(true)}>
+          <span className="w-4 text-center">⚿</span>
+          修改密码
+        </Button>
         <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
           <span className="w-4 text-center">⏻</span>
           退出登录
         </Button>
       </div>
       <VersionDialog open={versionOpen} onOpenChange={setVersionOpen} />
+      <PasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />
     </aside>
   );
 }

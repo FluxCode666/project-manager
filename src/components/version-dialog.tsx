@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -111,7 +113,7 @@ export function VersionDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         </DialogHeader>
 
         {info && (
-          <div className="space-y-4 text-sm">
+          <div className="min-w-0 space-y-4 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">当前版本</span>
               <code className="font-mono font-medium">{info.current}</code>
@@ -140,9 +142,42 @@ export function VersionDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                     <Separator />
                     <div>
                       <span className="text-muted-foreground">更新日志</span>
-                      <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs">
-                        {info.latest.notes.slice(0, 2000)}
-                      </pre>
+                      <div
+                        className="mt-1 max-h-40 overflow-auto rounded bg-muted p-3 text-xs leading-relaxed [overflow-wrap:anywhere]
+                          [&_h1]:my-3 [&_h1]:text-base [&_h1]:font-semibold
+                          [&_h2]:my-3 [&_h2]:text-sm [&_h2]:font-semibold
+                          [&_h3]:my-2 [&_h3]:font-semibold [&_h4]:my-2 [&_h4]:font-semibold
+                          [&_h5]:my-2 [&_h5]:font-semibold [&_h6]:my-2 [&_h6]:font-semibold
+                          [&_p]:my-2 [&_p]:whitespace-pre-line
+                          [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5
+                          [&_li]:my-1 [&_.contains-task-list]:list-none [&_.contains-task-list]:pl-0 [&_input]:mr-1.5
+                          [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2
+                          [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground
+                          [&_code]:rounded [&_code]:bg-background [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono
+                          [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-background [&_pre]:p-2 [&_pre]:whitespace-pre
+                          [&_pre_code]:bg-transparent [&_pre_code]:p-0
+                          [&_th]:border [&_th]:px-2 [&_th]:py-1 [&_td]:border [&_td]:px-2 [&_td]:py-1
+                          [&_hr]:my-3 [&_img]:my-2 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded
+                          [&>:first-child]:mt-0 [&>:last-child]:mb-0"
+                      >
+                        <Markdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            a: ({ href, title, children }) => (
+                              <a href={href} title={title} target="_blank" rel="noopener noreferrer">
+                                {children}
+                              </a>
+                            ),
+                            table: ({ children }) => (
+                              <div className="my-2 overflow-x-auto">
+                                <table className="w-full border-collapse">{children}</table>
+                              </div>
+                            ),
+                          }}
+                        >
+                          {info.latest.notes}
+                        </Markdown>
+                      </div>
                     </div>
                   </>
                 )}
