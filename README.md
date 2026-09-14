@@ -97,6 +97,10 @@ docker compose up -d
 - `./versions` 为应用内自更新的版本目录
 - 默认只绑 `127.0.0.1:3000`，对外请用 Nginx/Caddy 反代
 
+### NGINX HTTPS 反向代理
+
+已提供 [NGINX 配置与安装说明](deploy/nginx/README.md)，沿用 `aux-system/deploy/nginx` 的宿主机部署结构。将站点配置中的 `project-manager.example.com` 替换为真实域名、准备 TLS 证书后，即可反代到 `127.0.0.1:3000`；已适配 Next.js 流式响应及同步、备份、自更新的长请求。
+
 ### 应用内自更新
 
 1. 推送 tag（如 `v1.0.1`）触发 GitHub Actions：
