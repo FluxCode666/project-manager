@@ -79,15 +79,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 取完整历史，git log 对比上个 tag 需要
 
       - uses: actions/download-artifact@v4
         with:
           name: release-bundle
 
+      # 直接 push tag 发版不走 PR，generate_release_notes 只会生成 compare 链接
+      # 改用 git log 提取上个 tag 到本次 tag 的提交记录作为更新日志
+      - name: Generate changelog from git log
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${GITHUB_REF_NAME}$" | head -1 || true)
+          echo "## 更新日志" > CHANGELOG_BODY.md
+          if [ -n "$PREV_TAG" ]; then
+            echo " Comparing ${PREV_TAG}...${GITHUB_REF_NAME}" >&2
+            git log --no-merges --pretty=format:"- %s (%h)" "${PREV_TAG}..${GITHUB_REF_NAME}" >> CHANGELOG_BODY.md
+          else
+            git log --no-merges --pretty=format:"- %s (%h)" "${GITHUB_REF_NAME}" >> CHANGELOG_BODY.md
+          fi
+          echo "" >> CHANGELOG_BODY.md
+          echo "" >> CHANGELOG_BODY.md
+          echo "---" >> CHANGELOG_BODY.md
+          echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG:+${PREV_TAG}...}${GITHUB_REF_NAME}" >> CHANGELOG_BODY.md
+          cat CHANGELOG_BODY.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: CHANGELOG_BODY.md
           files: |
             project-manager-*.tar.gz
             project-manager-*.tar.gz.sha256
