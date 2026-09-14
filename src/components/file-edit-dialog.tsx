@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+
+const FileCodeEditor = dynamic(() => import("@/components/file-code-editor"), {
+  ssr: false,
+  loading: () => <div role="status" className="flex-1 rounded-lg border bg-card p-3 text-xs text-muted-foreground">正在加载编辑器…</div>,
+});
 
 export interface FileData {
   id: string;
@@ -61,6 +67,10 @@ export function FileEditDialog({ open, onOpenChange, title, file, filenameLocked
   }
 
   const lineCount = content.split("\n").length;
+  const handleContentChange = useCallback((value: string) => {
+    setContent(value);
+    setDirty(true);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,8 +81,9 @@ export function FileEditDialog({ open, onOpenChange, title, file, filenameLocked
             {dirty && <Badge variant="secondary">未保存</Badge>}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
+            aria-label="文件名"
             value={filename}
             onChange={(e) => {
               setFilename(e.target.value);
@@ -80,7 +91,7 @@ export function FileEditDialog({ open, onOpenChange, title, file, filenameLocked
             }}
             disabled={filenameLocked}
             placeholder="docker-compose.yml / .env"
-            className="w-64 font-mono text-sm"
+            className="w-full font-mono text-sm sm:w-64"
           />
           <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
             <span>
@@ -93,14 +104,10 @@ export function FileEditDialog({ open, onOpenChange, title, file, filenameLocked
             )}
           </div>
         </div>
-        <textarea
+        <FileCodeEditor
+          filename={filename}
           value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-            setDirty(true);
-          }}
-          spellCheck={false}
-          className="flex-1 resize-none rounded-md border bg-muted/30 p-3 font-mono text-xs leading-relaxed outline-none focus:ring-1 focus:ring-ring"
+          onChange={handleContentChange}
         />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

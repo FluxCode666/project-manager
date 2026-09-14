@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,17 +64,19 @@ export default function LogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="page-heading">
+        <div>
         <h1 className="text-2xl font-semibold">同步日志</h1>
         <p className="text-sm text-muted-foreground">所有部署文件同步记录（共 {total} 条）</p>
+        </div>
       </div>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">加载中...</p>
+            <div role="status" aria-label="正在加载同步记录" className="space-y-3">{[0, 1, 2].map((item) => <Skeleton key={item} className="h-16" />)}</div>
           ) : logs.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">暂无同步记录</p>
+            <EmptyState icon={<RefreshCw strokeWidth={1.5} />} title="每一次同步，都有记录" description="完成首次部署文件同步后，在这里查看执行结果、文件数量与详细日志。" />
           ) : (
             <Table>
               <TableHeader>

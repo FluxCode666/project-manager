@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-outfit), "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -27,6 +27,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -49,38 +50,39 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: #faf9f6;
+  --foreground: #233b32;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: #233b32;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: #233b32;
+  --primary: #285c45;
+  --primary-foreground: #ffffff;
+  --secondary: #f2efe9;
+  --secondary-foreground: #405442;
+  --muted: #f3f1ec;
+  --muted-foreground: #68746a;
+  --accent: #f0ede6;
+  --accent-foreground: #285c45;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --destructive-foreground: #ffffff;
+  --border: #e8e5df;
+  --input: #dedbd4;
+  --ring: #6a8f62;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.8rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #566458;
+  --sidebar-primary: #285c45;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0ede6;
+  --sidebar-accent-foreground: #285c45;
+  --sidebar-border: #e8e5df;
+  --sidebar-ring: #6a8f62;
 }
 
 .dark {
@@ -127,6 +129,15 @@
   html {
     @apply font-sans;
   }
+  ::selection {
+    background: #d6e5bc;
+    color: #233b32;
+  }
+  a:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 4px;
+  }
   /* 可点击元素 hover 显示小手 */
   button:not(:disabled),
   [role="button"]:not(:disabled),
@@ -139,5 +150,43 @@
   button:disabled,
   [role="button"]:disabled {
     cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .page-heading {
+    @apply flex flex-wrap items-center justify-between gap-4 border-b pb-7;
+  }
+  .page-heading h1 {
+    @apply text-[1.75rem] font-semibold tracking-tight;
+  }
+  .page-heading > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .page-heading p {
+    @apply mt-2 text-sm leading-relaxed text-muted-foreground;
+  }
+  .surface-link {
+    @apply transition duration-300 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_8px_28px_-16px_#24483240];
+  }
+  .landscape {
+    background-color: #365447;
+    background-image:
+      linear-gradient(110deg, #173d32d9, #2244388c),
+      url("/images/workspace-valley.jpg");
+    background-size: cover;
+    background-position: center 55%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

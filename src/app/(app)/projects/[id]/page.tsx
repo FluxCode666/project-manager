@@ -136,10 +136,10 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="page-heading items-start">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{project.name}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="break-words">{project.name}</h1>
             <Badge variant={st.variant}>{st.label}</Badge>
           </div>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{project.description || "暂无描述"}</p>

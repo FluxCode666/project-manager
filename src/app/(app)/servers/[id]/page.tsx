@@ -41,10 +41,10 @@ export default async function ServerDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-heading">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{server.name}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="break-words">{server.name}</h1>
             <Badge variant={st.variant}>{st.label}</Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{server.provider || "未设置供应商"}</p>

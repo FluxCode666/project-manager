@@ -61,29 +61,40 @@ interface EnvironmentDetail {
 const COMMON_COMMANDS = [
   { value: "none", label: "仅同步文件" },
   { value: "docker compose up -d", label: "docker compose up -d" },
-  { value: "docker compose up -d --env-file .env", label: "docker compose up -d --env-file .env" },
-  { value: "docker compose pull && docker compose up -d", label: "pull + up -d" },
+  {
+    value: "docker compose up -d --env-file .env",
+    label: "docker compose up -d --env-file .env",
+  },
+  {
+    value: "docker compose pull && docker compose up -d",
+    label: "pull + up -d",
+  },
 ];
 
 const COMMAND_ITEMS: Record<string, string> = Object.fromEntries(
-  COMMON_COMMANDS.map((c) => [c.value, c.label])
+  COMMON_COMMANDS.map((c) => [c.value, c.label]),
 );
 
 export default function EnvironmentPage() {
   const { envId, id: projectId } = useParams<{ envId: string; id: string }>();
   const [env, setEnv] = useState<EnvironmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [servers, setServers] = useState<{ id: string; name: string; host: string }[]>([]);
+  const [servers, setServers] = useState<
+    { id: string; name: string; host: string }[]
+  >([]);
 
   // 共享文件编辑
   const [envFileDialog, setEnvFileDialog] = useState(false);
-  const [editingEnvFile, setEditingEnvFile] = useState<EnvFileData | null>(null);
+  const [editingEnvFile, setEditingEnvFile] = useState<EnvFileData | null>(
+    null,
+  );
   const [deleteEnvFile, setDeleteEnvFile] = useState<EnvFileData | null>(null);
 
   // 目标专属文件编辑
   const [targetFileDialog, setTargetFileDialog] = useState(false);
   const [editingTarget, setEditingTarget] = useState<TargetData | null>(null);
-  const [editingTargetFile, setEditingTargetFile] = useState<TargetFileData | null>(null);
+  const [editingTargetFile, setEditingTargetFile] =
+    useState<TargetFileData | null>(null);
 
   // 绑定服务器
   const [bindDialog, setBindDialog] = useState(false);
@@ -116,7 +127,10 @@ export default function EnvironmentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      if (!res.ok) throw new Error(((await res.json()) as { error: string }).error || "保存失败");
+      if (!res.ok)
+        throw new Error(
+          ((await res.json()) as { error: string }).error || "保存失败",
+        );
       toast.success("文件已保存");
     } else {
       const res = await fetch("/api/env-files", {
@@ -124,7 +138,10 @@ export default function EnvironmentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ environmentId: envId, filename, content }),
       });
-      if (!res.ok) throw new Error(((await res.json()) as { error: string }).error || "保存失败");
+      if (!res.ok)
+        throw new Error(
+          ((await res.json()) as { error: string }).error || "保存失败",
+        );
       toast.success("文件已创建");
     }
     load();
@@ -132,7 +149,9 @@ export default function EnvironmentPage() {
 
   async function handleDeleteEnvFile() {
     if (!deleteEnvFile) return;
-    const res = await fetch(`/api/env-files/${deleteEnvFile.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/env-files/${deleteEnvFile.id}`, {
+      method: "DELETE",
+    });
     if (res.ok) {
       toast.success("文件已删除");
       setDeleteEnvFile(null);
@@ -154,7 +173,9 @@ export default function EnvironmentPage() {
       setBindServerId("");
       load();
     } else {
-      toast.error(((await res.json()) as { error: string }).error || "绑定失败");
+      toast.error(
+        ((await res.json()) as { error: string }).error || "绑定失败",
+      );
     }
   }
 
@@ -169,7 +190,9 @@ export default function EnvironmentPage() {
 
   async function handleDeleteTarget() {
     if (!deletingTarget) return;
-    const res = await fetch(`/api/targets/${deletingTarget.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/targets/${deletingTarget.id}`, {
+      method: "DELETE",
+    });
     if (res.ok) {
       toast.success("部署目标已移除");
       setDeletingTarget(null);
@@ -186,22 +209,34 @@ export default function EnvironmentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      if (!res.ok) throw new Error(((await res.json()) as { error: string }).error || "保存失败");
+      if (!res.ok)
+        throw new Error(
+          ((await res.json()) as { error: string }).error || "保存失败",
+        );
       toast.success("文件已保存");
     } else {
       const res = await fetch("/api/target-files", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deployTargetId: editingTarget.id, filename, content }),
+        body: JSON.stringify({
+          deployTargetId: editingTarget.id,
+          filename,
+          content,
+        }),
       });
-      if (!res.ok) throw new Error(((await res.json()) as { error: string }).error || "保存失败");
+      if (!res.ok)
+        throw new Error(
+          ((await res.json()) as { error: string }).error || "保存失败",
+        );
       toast.success("文件已创建");
     }
     load();
   }
 
   async function deleteTargetFile(file: TargetFileData) {
-    const res = await fetch(`/api/target-files/${file.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/target-files/${file.id}`, {
+      method: "DELETE",
+    });
     if (res.ok) {
       toast.success("文件已删除");
       load();
@@ -217,7 +252,7 @@ export default function EnvironmentPage() {
       return;
     }
     const res = await fetch(
-      `/api/sync?deployTargetId=${editingTarget.id}&filename=${encodeURIComponent(editingTargetFile.filename)}`
+      `/api/sync?deployTargetId=${editingTarget.id}&filename=${encodeURIComponent(editingTargetFile.filename)}`,
     );
     const data = await res.json();
     if (!res.ok) {
@@ -233,16 +268,27 @@ export default function EnvironmentPage() {
     toast.success("已拉取服务器内容，请注意核对后保存");
   }
 
-  function reportResults(results: { serverName: string; status: string; filesSynced: number; errorMessage?: string }[]) {
+  function reportResults(
+    results: {
+      serverName: string;
+      status: string;
+      filesSynced: number;
+      errorMessage?: string;
+    }[],
+  ) {
     const ok = results.filter((r) => r.status === "success");
     const bad = results.filter((r) => r.status !== "success");
     if (ok.length) {
       toast.success(`同步成功 ${ok.length} 台`, {
-        description: ok.map((r) => `${r.serverName}（${r.filesSynced} 文件）`).join("、"),
+        description: ok
+          .map((r) => `${r.serverName}（${r.filesSynced} 文件）`)
+          .join("、"),
       });
     }
     for (const b of bad) {
-      toast.error(`${b.serverName} 同步失败`, { description: b.errorMessage?.slice(0, 200) });
+      toast.error(`${b.serverName} 同步失败`, {
+        description: b.errorMessage?.slice(0, 200),
+      });
     }
   }
 
@@ -285,12 +331,16 @@ export default function EnvironmentPage() {
     }
   }
 
-  if (loading) return <p className="text-sm text-muted-foreground">加载中...</p>;
+  if (loading)
+    return <p className="text-sm text-muted-foreground">加载中...</p>;
   if (!env)
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">环境不存在</p>
-        <Link href={`/projects/${projectId}`} className={buttonVariants({ variant: "outline" })}>
+        <Link
+          href={`/projects/${projectId}`}
+          className={buttonVariants({ variant: "outline" })}
+        >
           ← 返回项目
         </Link>
       </div>
@@ -301,7 +351,7 @@ export default function EnvironmentPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="page-heading items-start">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link href={`/projects/${projectId}`} className="hover:underline">
@@ -310,14 +360,20 @@ export default function EnvironmentPage() {
             <span>/</span>
             <span className="text-foreground">{env.name}</span>
           </div>
-          <div className="mt-1 flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{env.name} 环境</h1>
-            <code className="rounded bg-muted px-2 py-1 font-mono text-sm">{env.deployPath}</code>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h1 className="break-words">{env.name} 环境</h1>
+            <code className="max-w-full break-all rounded bg-muted px-2 py-1 font-mono text-xs">
+              {env.deployPath}
+            </code>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={syncCommand} onValueChange={(v) => v && setSyncCommand(v)} items={COMMAND_ITEMS}>
-            <SelectTrigger className="w-64">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <Select
+            value={syncCommand}
+            onValueChange={(v) => v && setSyncCommand(v)}
+            items={COMMAND_ITEMS}
+          >
+            <SelectTrigger className="w-full sm:w-64">
               <SelectValue placeholder="同步后命令" />
             </SelectTrigger>
             <SelectContent>
@@ -328,7 +384,10 @@ export default function EnvironmentPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={handleSyncAll} disabled={syncing !== null || env.targets.length === 0}>
+          <Button
+            onClick={handleSyncAll}
+            disabled={syncing !== null || env.targets.length === 0}
+          >
             {syncing === "all" ? "同步中..." : "同步全部服务器"}
           </Button>
         </div>
@@ -336,7 +395,7 @@ export default function EnvironmentPage() {
 
       {/* 共享文件 */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <CardTitle>共享文件（{env.files.length}）</CardTitle>
           <Button
             variant="outline"
@@ -357,7 +416,10 @@ export default function EnvironmentPage() {
           ) : (
             <div className="space-y-2">
               {env.files.map((f) => (
-                <div key={f.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                <div
+                  key={f.id}
+                  className="flex items-center justify-between rounded-md border px-3 py-2"
+                >
                   <div>
                     <code className="font-mono text-sm">{f.filename}</code>
                     <div className="text-xs text-muted-foreground">
@@ -375,7 +437,12 @@ export default function EnvironmentPage() {
                     >
                       编辑
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteEnvFile(f)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => setDeleteEnvFile(f)}
+                    >
                       删除
                     </Button>
                   </div>
@@ -388,8 +455,15 @@ export default function EnvironmentPage() {
 
       {/* 部署目标 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted-foreground">部署目标（{env.targets.length} 台服务器）</h2>
-        <Button variant="outline" size="sm" onClick={() => setBindDialog(true)} disabled={availableServers.length === 0}>
+        <h2 className="text-sm font-medium text-muted-foreground">
+          部署目标（{env.targets.length} 台服务器）
+        </h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setBindDialog(true)}
+          disabled={availableServers.length === 0}
+        >
           + 绑定服务器
         </Button>
       </div>
@@ -405,47 +479,76 @@ export default function EnvironmentPage() {
             const lastLog = t.syncLogs[0];
             return (
               <Card key={t.id}>
-                <CardHeader className="flex-row items-center justify-between pb-3">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <Link href={`/servers/${t.server.id}`} className="font-semibold hover:underline">
+                      <Link
+                        href={`/servers/${t.server.id}`}
+                        className="font-semibold hover:underline"
+                      >
                         {t.server.name}
                       </Link>
-                      <Switch checked={t.enabled} onCheckedChange={(v) => toggleTarget(t, v)} />
+                      <Switch
+                        checked={t.enabled}
+                        onCheckedChange={(v) => toggleTarget(t, v)}
+                      />
                     </div>
-                    <code className="text-xs text-muted-foreground">
+                    <code className="break-all text-xs text-muted-foreground">
                       {t.server.host} → {env.deployPath}
                     </code>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="sm" disabled={syncing !== null || !t.enabled} onClick={() => handleSyncOne(t)}>
+                    <Button
+                      size="sm"
+                      disabled={syncing !== null || !t.enabled}
+                      onClick={() => handleSyncOne(t)}
+                    >
                       {syncing === t.id ? "同步中..." : "同步"}
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeletingTarget(t)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => setDeletingTarget(t)}
+                    >
                       解绑
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {lastLog && (
-                    <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant={lastLog.status === "success" ? "default" : "destructive"}>
+                    <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <Badge
+                        variant={
+                          lastLog.status === "success"
+                            ? "default"
+                            : "destructive"
+                        }
+                      >
                         {lastLog.status === "success" ? "上次成功" : "上次失败"}
                       </Badge>
-                      {new Date(lastLog.createdAt).toLocaleString("zh-CN")} · {lastLog.filesSynced} 文件 ·{" "}
-                      {lastLog.durationMs}ms
+                      {new Date(lastLog.createdAt).toLocaleString("zh-CN")} ·{" "}
+                      {lastLog.filesSynced} 文件 · {lastLog.durationMs}ms
                     </div>
                   )}
                   <div className="space-y-2">
                     {t.files.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">无专属文件（同步时仅写入共享文件）</p>
+                      <p className="text-xs text-muted-foreground">
+                        无专属文件（同步时仅写入共享文件）
+                      </p>
                     ) : (
                       t.files.map((f) => (
-                        <div key={f.id} className="flex items-center justify-between rounded-md border px-3 py-1.5">
+                        <div
+                          key={f.id}
+                          className="flex items-center justify-between rounded-md border px-3 py-1.5"
+                        >
                           <div>
-                            <code className="font-mono text-sm">{f.filename}</code>
+                            <code className="font-mono text-sm">
+                              {f.filename}
+                            </code>
                             <div className="text-xs text-muted-foreground">
-                              本机专属 · {f.content.split("\n").length} 行 · 同步时覆盖同名共享文件
+                              本机专属 · {f.content.split("\n").length} 行 ·
+                              同步时覆盖同名共享文件
                             </div>
                           </div>
                           <div className="flex gap-1">
@@ -494,9 +597,12 @@ export default function EnvironmentPage() {
 
       {/* 共享文件编辑对话框 */}
       <FileEditDialog
+        key={`env-file-${envFileDialog ? "open" : "closed"}-${editingEnvFile?.id ?? "new"}-${editingEnvFile?.content ?? ""}`}
         open={envFileDialog}
         onOpenChange={setEnvFileDialog}
-        title={editingEnvFile ? `编辑 ${editingEnvFile.filename}` : "添加共享文件"}
+        title={
+          editingEnvFile ? `编辑 ${editingEnvFile.filename}` : "添加共享文件"
+        }
         file={editingEnvFile}
         filenameLocked={!!editingEnvFile}
         onSave={saveEnvFile}
@@ -504,6 +610,7 @@ export default function EnvironmentPage() {
 
       {/* 目标专属文件编辑对话框 */}
       <FileEditDialog
+        key={`target-file-${targetFileDialog ? "open" : "closed"}-${editingTargetFile?.id ?? "new"}-${editingTargetFile?.content ?? ""}`}
         open={targetFileDialog}
         onOpenChange={setTargetFileDialog}
         title={
@@ -529,7 +636,9 @@ export default function EnvironmentPage() {
           <Select
             value={bindServerId}
             onValueChange={(v) => v && setBindServerId(v)}
-            items={Object.fromEntries(availableServers.map((s) => [s.id, `${s.name}（${s.host}）`]))}
+            items={Object.fromEntries(
+              availableServers.map((s) => [s.id, `${s.name}（${s.host}）`]),
+            )}
           >
             <SelectTrigger>
               <SelectValue placeholder="选择服务器" />
@@ -552,17 +661,25 @@ export default function EnvironmentPage() {
       </AlertDialog>
 
       {/* 共享文件删除确认 */}
-      <AlertDialog open={!!deleteEnvFile} onOpenChange={(open) => !open && setDeleteEnvFile(null)}>
+      <AlertDialog
+        open={!!deleteEnvFile}
+        onOpenChange={(open) => !open && setDeleteEnvFile(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除共享文件「{deleteEnvFile?.filename}」？</AlertDialogTitle>
+            <AlertDialogTitle>
+              删除共享文件「{deleteEnvFile?.filename}」？
+            </AlertDialogTitle>
             <AlertDialogDescription>
               该文件将从本系统中删除；服务器上的已有文件不受影响，下次同步将不再写入此文件。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={handleDeleteEnvFile}>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground"
+              onClick={handleDeleteEnvFile}
+            >
               删除
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -570,17 +687,25 @@ export default function EnvironmentPage() {
       </AlertDialog>
 
       {/* 解绑确认 */}
-      <AlertDialog open={!!deletingTarget} onOpenChange={(open) => !open && setDeletingTarget(null)}>
+      <AlertDialog
+        open={!!deletingTarget}
+        onOpenChange={(open) => !open && setDeletingTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>解绑服务器「{deletingTarget?.server.name}」？</AlertDialogTitle>
+            <AlertDialogTitle>
+              解绑服务器「{deletingTarget?.server.name}」？
+            </AlertDialogTitle>
             <AlertDialogDescription>
               将删除该部署目标的专属文件配置与同步记录；服务器上的文件不受影响。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={handleDeleteTarget}>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground"
+              onClick={handleDeleteTarget}
+            >
               解绑
             </AlertDialogAction>
           </AlertDialogFooter>

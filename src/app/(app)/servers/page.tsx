@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Plus, Server } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,7 +84,7 @@ export default function ServersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-heading">
         <div>
           <h1 className="text-2xl font-semibold">服务器</h1>
           <p className="text-sm text-muted-foreground">团队服务器资产与 SSH 凭据管理</p>
@@ -92,18 +95,16 @@ export default function ServersPage() {
             setDialogOpen(true);
           }}
         >
-          + 添加服务器
+          <Plus className="size-4" aria-hidden="true" /> 添加服务器
         </Button>
       </div>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">加载中...</p>
+            <div role="status" aria-label="正在加载服务器" className="space-y-3">{[0, 1, 2].map((item) => <Skeleton key={item} className="h-16" />)}</div>
           ) : servers.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              还没有服务器，点击右上角「添加服务器」开始
-            </p>
+            <EmptyState icon={<Server strokeWidth={1.5} />} title="连接你的第一台服务器" description="统一管理服务器资产与连接凭据，为项目准备好部署目标。" action={<Button onClick={() => { setEditing(null); setDialogOpen(true); }}><Plus className="size-4" aria-hidden="true" />添加服务器</Button>} />
           ) : (
             <Table>
               <TableHeader>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HardDriveDownload } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -148,11 +150,13 @@ export default function BackupPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="page-heading">
+        <div>
         <h1 className="text-2xl font-semibold">备份</h1>
         <p className="text-sm text-muted-foreground">
-          SQLite 快照（VACUUM INTO 一致性快照 + gzip）备份到 WebDAV，含全部项目/服务器凭据/环境配置
+          自动保存项目、服务器凭据与环境配置，为团队的每一步进展留底。
         </p>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -256,11 +260,9 @@ export default function BackupPage() {
           </CardHeader>
           <CardContent>
             {remote === null ? (
-              <p className="text-sm text-muted-foreground">
-                {config?.enabled ? "读取远端列表失败" : "备份未启用"}
-              </p>
+              <EmptyState icon={<HardDriveDownload strokeWidth={1.5} />} title={config?.enabled ? "暂时无法读取远端文件" : "为项目多留一份保障"} description={config?.enabled ? "请检查 WebDAV 连接配置，再重新加载页面。" : "启用备份并保存配置，远端文件会在这里有序呈现。"} />
             ) : remote.length === 0 ? (
-              <p className="text-sm text-muted-foreground">远端暂无备份文件，点击「立即备份」创建第一个</p>
+              <EmptyState icon={<HardDriveDownload strokeWidth={1.5} />} title="准备好保存第一份备份" description="点击「立即备份」，为当前的项目与环境配置创建一份快照。" />
             ) : (
               <div className="space-y-1.5">
                 {remote.map((f) => (
