@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { FileEditDialog, type FileData } from "@/components/file-edit-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface EnvFileData extends FileData {
@@ -104,6 +105,12 @@ export default function EnvironmentPage() {
   // 同步
   const [syncCommand, setSyncCommand] = useState("none");
   const [syncing, setSyncing] = useState<string | null>(null); // "all" 或 targetId
+  const [pullTarget, setPullTarget] = useState<TargetData | null>(null);
+  const [remoteFiles, setRemoteFiles] = useState<string[]>([]);
+  const [selectedRemoteFiles, setSelectedRemoteFiles] = useState<string[]>([]);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [importingRemote, setImportingRemote] = useState<"target" | "shared" | null>(null);
+  const [promotingFile, setPromotingFile] = useState<{ target: TargetData; file: TargetFileData } | null>(null);
 
   async function load() {
     const [envRes, serversRes] = await Promise.all([
@@ -331,6 +338,62 @@ export default function EnvironmentPage() {
     }
   }
 
+  async function openRemoteFiles(t: TargetData) {
+    setPullTarget(t);
+    setRemoteFiles([]);
+    setSelectedRemoteFiles([]);
+    setRemoteLoading(true);
+    try {
+      const res = await fetch(`/api/remote-files?deployTargetId=${t.id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "读取失败");
+      setRemoteFiles(data.files ?? []);
+    } catch (e) {
+      toast.error((e as Error).message);
+      setPullTarget(null);
+    } finally {
+      setRemoteLoading(false);
+    }
+  }
+
+  async function importRemoteFiles(mode: "target" | "shared") {
+    if (!pullTarget || selectedRemoteFiles.length === 0) return;
+    setImportingRemote(mode);
+    try {
+      const res = await fetch("/api/remote-files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deployTargetId: pullTarget.id, filenames: selectedRemoteFiles, mode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "导入失败");
+      toast.success(`已导入 ${data.imported?.length ?? 0} 个文件${mode === "shared" ? "为环境共享文件" : "为服务器专属文件"}`);
+      setPullTarget(null);
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setImportingRemote(null);
+    }
+  }
+
+  async function promoteTargetFile(target: TargetData, file: TargetFileData) {
+    try {
+      const res = await fetch("/api/remote-files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deployTargetId: target.id, filenames: [file.filename], mode: "shared" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "升级失败");
+      toast.success(`「${file.filename}」已升级为共享文件`);
+      setPromotingFile(null);
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   if (loading)
     return <p className="text-sm text-muted-foreground">加载中...</p>;
   if (!env)
@@ -498,6 +561,9 @@ export default function EnvironmentPage() {
                     </code>
                   </div>
                   <div className="flex items-center gap-1">
+                    <Button variant="outline" size="sm" onClick={() => openRemoteFiles(t)} disabled={!t.enabled}>
+                      拉取文件
+                    </Button>
                     <Button
                       size="sm"
                       disabled={syncing !== null || !t.enabled}
@@ -555,6 +621,13 @@ export default function EnvironmentPage() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => setPromotingFile({ target: t, file: f })}
+                            >
+                              升级共享
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 setEditingTarget(t);
                                 setEditingTargetFile(f);
@@ -607,6 +680,48 @@ export default function EnvironmentPage() {
         filenameLocked={!!editingEnvFile}
         onSave={saveEnvFile}
       />
+
+      <Dialog open={!!pullTarget} onOpenChange={(open) => !open && setPullTarget(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>从服务器拉取文件</DialogTitle>
+            <DialogDescription>
+              {pullTarget?.server.name} · {env.deployPath}。选择文件后可导入为专属文件，或升级为当前环境的共享文件；同名共享文件会被服务器内容覆盖。
+            </DialogDescription>
+          </DialogHeader>
+          {remoteLoading ? (
+            <p className="text-sm text-muted-foreground">正在读取服务器目录…</p>
+          ) : remoteFiles.length === 0 ? (
+            <p className="text-sm text-muted-foreground">部署目录中没有普通文件，或目录不存在。</p>
+          ) : (
+            <>
+              <div className="max-h-64 space-y-1 overflow-y-auto rounded-md border p-2">
+                {remoteFiles.map((filename) => (
+                  <label key={filename} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                    <input
+                      type="checkbox"
+                      checked={selectedRemoteFiles.includes(filename)}
+                      onChange={(e) => setSelectedRemoteFiles((current) => e.target.checked ? [...current, filename] : current.filter((f) => f !== filename))}
+                    />
+                    <code className="font-mono">{filename}</code>
+                  </label>
+                ))}
+              </div>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelectedRemoteFiles(selectedRemoteFiles.length === remoteFiles.length ? [] : remoteFiles)}>
+                  {selectedRemoteFiles.length === remoteFiles.length ? "取消全选" : "全选"}
+                </Button>
+                <Button variant="outline" disabled={!selectedRemoteFiles.length || !!importingRemote} onClick={() => importRemoteFiles("target")}>
+                  {importingRemote === "target" ? "导入中…" : "导入为专属文件"}
+                </Button>
+                <Button disabled={!selectedRemoteFiles.length || !!importingRemote} onClick={() => importRemoteFiles("shared")}>
+                  {importingRemote === "shared" ? "升级中…" : "升级为共享文件"}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* 目标专属文件编辑对话框 */}
       <FileEditDialog
@@ -707,6 +822,23 @@ export default function EnvironmentPage() {
               onClick={handleDeleteTarget}
             >
               解绑
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!promotingFile} onOpenChange={(open) => !open && setPromotingFile(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>升级为环境共享文件？</AlertDialogTitle>
+            <AlertDialogDescription>
+              将「{promotingFile?.file.filename}」从 {promotingFile?.target.server.name} 的服务器内容导入为「{env.name}」环境共享文件，并移除该服务器的同名专属文件。系统中已有同名共享文件会被覆盖。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => promotingFile && promoteTargetFile(promotingFile.target, promotingFile.file)}>
+              升级共享
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -112,6 +112,19 @@ export function sftpReadFile(conn: Client, remotePath: string): Promise<string |
   });
 }
 
+export function sftpListFiles(conn: Client, remoteDir: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    conn.sftp((err, sftp) => {
+      if (err) return reject(err);
+      sftp.readdir(remoteDir, (readErr, entries) => {
+        sftp.end();
+        if (readErr) return reject(readErr);
+        resolve(entries.filter((entry) => entry.attrs.isFile()).map((entry) => entry.filename));
+      });
+    });
+  });
+}
+
 export function sshTestConnection(server: SshServerConfig): Promise<{ ok: boolean; message: string }> {
   return new Promise((resolve) => {
     sshConnect(server)
