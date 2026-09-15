@@ -38,12 +38,26 @@ export function Sidebar() {
   const [versionOpen, setVersionOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
 
+  // 挂载时检查一次，之后每 30 分钟定时扫描新版本
   useEffect(() => {
-    fetch("/api/version")
-      .then((r) => r.json())
-      .then((d) => setVersion(d.current))
-      .catch(() => {});
+    let cancelled = false;
+    async function checkVersion() {
+      try {
+        const r = await fetch("/api/version");
+        const d = await r.json();
+        if (cancelled) return;
+        setVersion(d.current);
+        setUpdateAvailable(d.hasUpdate ? (d.latest?.tag ?? "new") : null);
+      } catch {}
+    }
+    checkVersion();
+    const timer = setInterval(checkVersion, 30 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, []);
 
   async function handleLogout() {
@@ -160,7 +174,13 @@ export function Sidebar() {
           className="mt-1 flex w-full items-center justify-between rounded-lg px-4 py-2 text-[10px] text-muted-foreground transition-colors hover:bg-muted"
         >
           <span>Project Manager</span>
-          <span className="font-mono">
+          <span className="flex items-center gap-1.5 font-mono">
+            {updateAvailable && (
+              <span
+                className="size-1.5 animate-pulse rounded-full bg-red-500"
+                title={`发现新版本 ${updateAvailable}，点击查看更新`}
+              />
+            )}
             {version ? `v${version.replace(/^v/, "")}` : "版本信息"}
           </span>
         </button>

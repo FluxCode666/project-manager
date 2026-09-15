@@ -9,6 +9,17 @@ import {
 
 export const runtime = "nodejs";
 
+/** 去掉 GitHub 自动生成 release notes 末尾的 "**Full Changelog**: ..." 链接行 */
+function stripFullChangelog(body: string | null): string | null {
+  if (!body) return body;
+  const cleaned = body
+    .split("\n")
+    .filter((line) => !/^\s*(\*\*)?full changelog/i.test(line))
+    .join("\n")
+    .trim();
+  return cleaned || null;
+}
+
 // GET /api/version —— 当前版本 + 最新 release 信息
 export async function GET() {
   const current = getCurrentVersion();
@@ -35,7 +46,7 @@ export async function GET() {
         name: release.name,
         publishedAt: release.publishedAt,
         htmlUrl: release.htmlUrl,
-        notes: release.body,
+        notes: stripFullChangelog(release.body),
       },
       hasUpdate: isNewerVersion(release.tag, current),
     });
