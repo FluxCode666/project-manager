@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   ChevronRight,
   FolderKanban,
+  Globe,
   HardDriveDownload,
   KeyRound,
   LayoutDashboard,
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/", label: "仪表盘", icon: LayoutDashboard },
   { href: "/projects", label: "项目管理", icon: FolderKanban },
   { href: "/servers", label: "服务器", icon: Server },
+  { href: "/nginx", label: "Nginx", icon: Globe },
   { href: "/logs", label: "同步日志", icon: RefreshCw },
   { href: "/backup", label: "数据备份", icon: HardDriveDownload },
 ];

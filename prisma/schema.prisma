@@ -39,6 +39,7 @@ model Server {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   targets       DeployTarget[]
+  nginxSites    NginxSite[]
 }
 
 // 项目环境（生产/测试/开发...）
@@ -139,6 +140,22 @@ model BackupLog {
   durationMs  Int      @default(0)
   errorMessage String?
   createdAt   DateTime @default(now())
+}
+
+// nginx 站点配置（挂在一台服务器资产下，同步到 /etc/nginx/conf.d/<name>.conf）
+model NginxSite {
+  id        String   @id @default(cuid())
+  serverId  String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  name      String // 站点标识（不含 .conf 后缀），同时作为配置文件名
+  domains   String? // 逗号分隔的域名列表
+  content   String // nginx server block 配置内容
+  enabled   Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([serverId, name])
 }
 
 // 应用设置（键值存储，当前用于页面内修改的登录密码）
