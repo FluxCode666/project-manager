@@ -7,6 +7,7 @@ import { SitesTab } from "./sites-tab";
 import { ModulesTab } from "./modules-tab";
 import { LogsTab } from "./logs-tab";
 import { StatsTab } from "./stats-tab";
+import { CertificatesTab } from "./certificates-tab";
 
 export function NginxManager({ serverId }: { serverId: string; serverName: string }) {
   const [tab, setTab] = useState("overview");
@@ -19,6 +20,7 @@ export function NginxManager({ serverId }: { serverId: string; serverName: strin
         <TabsTrigger value="modules">模块</TabsTrigger>
         <TabsTrigger value="logs">日志</TabsTrigger>
         <TabsTrigger value="stats">统计</TabsTrigger>
+        <TabsTrigger value="certificates">证书</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
@@ -35,6 +37,9 @@ export function NginxManager({ serverId }: { serverId: string; serverName: strin
       </TabsContent>
       <TabsContent value="stats" className="mt-6">
         <StatsTab serverId={serverId} />
+      </TabsContent>
+      <TabsContent value="certificates" className="mt-6">
+        <CertificatesTab serverId={serverId} />
       </TabsContent>
     </Tabs>
   );
