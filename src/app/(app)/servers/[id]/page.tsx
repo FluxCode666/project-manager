@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DockerManager } from "@/components/docker/docker-manager";
 import {
   Table,
   TableBody,
@@ -144,6 +145,16 @@ export default async function ServerDetailPage({ params }: { params: Promise<{ i
           </CardContent>
         </Card>
       </div>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-medium">Docker 容器</h2>
+          <p className="text-sm text-muted-foreground">
+            通过该服务器保存的 SSH 凭据读取本机 Docker（含已停止容器）和最近日志；支持清空已停止容器的 json-file 日志。
+          </p>
+        </div>
+        <DockerManager serverId={server.id} />
+      </section>
     </div>
   );
 }
